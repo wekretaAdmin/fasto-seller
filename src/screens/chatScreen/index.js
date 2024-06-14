@@ -27,6 +27,8 @@ import {useDispatch, useSelector} from 'react-redux';
 import database from '@react-native-firebase/database';
 import {emptyProductData} from '../../redux/reducer/ProductsSlice';
 import RouteName from '../../navigation/Routeame';
+import {initiateOrder} from '../../apiServices/ApiHelper';
+import AxiosInstance from '../../apiServices/AxiosInstance';
 
 const ChatScreen = () => {
   const navigation = useNavigation();
@@ -70,6 +72,27 @@ const ChatScreen = () => {
   // const result = inputString.replace(regex, '@');
 
   useEffect(() => {
+    orderInitiate(sellerUUId);
+  }, []);
+
+  const orderInitiate = async data => {
+    console.log('abcdwrd');
+    const body = {
+      uuid: data,
+    };
+    const url = initiateOrder();
+    console.log(url);
+    try {
+      const response = await AxiosInstance.post(url, body);
+      console.log('orderInitiate response', response.data);
+      if (response.data.status) {
+      }
+    } catch (err) {
+      console.log('@ orderInitiate error', err);
+    }
+  };
+
+  useEffect(() => {
     const messagesRef = database().ref(
       `${userData?.email.replace(regex, '1')}-${sellerUUId}`,
     );
@@ -79,11 +102,14 @@ const ChatScreen = () => {
       const messagesData = snapshot.val();
 
       if (messagesData) {
-        const messagesList = Object.keys(messagesData).map(key => ({
-          ...messagesData[key],
-          id: key,
-        }));
-        setMessages(messagesList);
+        // const messagesList = Object.keys(messagesData).map(key => ({
+        //   ...messagesData[key],
+        //   id: key,
+        // }));
+        const chatList = Object.values(messagesData).reverse();
+        const _chatList = chatList.sort(sort_by_id());
+        // setLastActiveUsers(_chatList);
+        setMessages(_chatList.reverse());
       } else {
         setMessages([]);
       }
@@ -103,28 +129,41 @@ const ChatScreen = () => {
             text: message,
             orderData: UpdateList,
 
-            // timestamp: Date.now(),
+            id: Date.now(),
             // timestamp: getTimeStamp(),
             role: 'Customer',
           },
           // chatApi(),
         );
-      dispatch(emptyProductData());
+      dispatch(emptyProductData([]));
     }
   }, [UpdateList]);
 
+  const sort_by_id = () =>
+    function (elem1, elem2) {
+      if (elem1.id < elem2.id) {
+        return -1;
+      }
+      if (elem1.id > elem2.id) {
+        return 1;
+      }
+      return 0;
+    };
+
   const sendMessage = () => {
     if (message.trim() !== '') {
-      database().ref(`${userData?.email}-${sellerUUId}`).push(
-        {
-          text: message,
+      database()
+        .ref(`${userData?.email.replace(regex, '1')}-${sellerUUId}`)
+        .push(
+          {
+            text: message,
 
-          // timestamp: Date.now(),
-          // timestamp: getTimeStamp(),
-          role: 'Customer',
-        },
-        // chatApi(),
-      );
+            id: Date.now(),
+            // timestamp: getTimeStamp(),
+            role: 'Customer',
+          },
+          // chatApi(),
+        );
       setMessage('');
     }
   };
@@ -303,6 +342,20 @@ const ChatScreen = () => {
               flexDirection: 'row',
               alignItems: 'center',
             }}>
+            <TouchableOpacity
+              onPress={() => {
+                dispatch(emptyProductData([]));
+                navigation.replace(RouteName.SUGGESTED_PRODUCT);
+              }}>
+              <VectorIcon name="add-shopping-cart" material-icon size={18} />
+            </TouchableOpacity>
+            <Gap row m6 />
+
+            <TouchableOpacity>
+              <VectorIcon name="chat" material-icon size={18} />
+            </TouchableOpacity>
+            <Gap row m6 />
+
             <VectorIcon name="call" material-icon size={18} />
             <Gap row m6 />
             <VectorIcon name="video" material-community-icon size={20} />

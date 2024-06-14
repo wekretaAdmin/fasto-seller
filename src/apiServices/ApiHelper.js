@@ -28,3 +28,6 @@ export const addAddress = () => `${StoreManager}fasto/customer/address`;
 
 export const fetchAddress = () =>
   `${StoreManager}fasto/customer/address?itemsPerPage=10&currentPage=1`;
+
+export const initiateOrder = () =>
+  `${StoreManager}fasto/customer/initiate-order`;

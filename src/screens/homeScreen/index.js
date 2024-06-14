@@ -105,7 +105,11 @@ const HomeScreen = () => {
       const response = await AxiosInstance.get(url);
       console.log('supplierList response', response.data);
       if (response.data.status) {
-        setSellerData([1, ...response.data.object]);
+        if (response.data.object == null) {
+          setSellerData([1]);
+        } else {
+          setSellerData([1, ...response.data.object]);
+        }
       }
     } catch (err) {
       console.log('@ supplierList error', err);
@@ -214,7 +218,11 @@ const HomeScreen = () => {
               onPress={() => {
                 // setConnectOption(true)
                 dispatch(addStoreUuid(item?.uuid));
-                navigation.navigate(RouteName.SUGGESTED_PRODUCT);
+                if (item?.isActiveChat) {
+                  navigation.navigate(RouteName.CHAT_SCREEN);
+                } else {
+                  navigation.navigate(RouteName.SUGGESTED_PRODUCT);
+                }
               }}
               onLongPress={() => {
                 setDeleteMethod(false);
